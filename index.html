@@ -124,33 +124,8 @@
     // URL Parameters handling
     const urlParams = new URLSearchParams(window.location.search);
 
-    // Timezone Alias Map
-    const tzMap = {
-      'PST': 'America/Los_Angeles',
-      'PDT': 'America/Los_Angeles',
-      'PT': 'America/Los_Angeles',
-      'EST': 'America/New_York',
-      'EDT': 'America/New_York',
-      'ET': 'America/New_York',
-      'CST': 'America/Chicago',
-      'CDT': 'America/Chicago',
-      'CT': 'America/Chicago',
-      'MST': 'America/Denver',
-      'MDT': 'America/Denver',
-      'MT': 'America/Denver',
-      'UTC': 'UTC',
-      'GMT': 'GMT',
-      'JST': 'Asia/Tokyo',
-      'KST': 'Asia/Seoul',
-      'BST': 'Europe/London',
-      'CET': 'Europe/Paris',
-      'CEST': 'Europe/Paris',
-      'AEST': 'Australia/Sydney',
-      'AEDT': 'Australia/Sydney',
-    };
-
-    const tzInput = urlParams.get('tz') || 'PST';
-    let timeZone = tzMap[tzInput.toUpperCase()] || tzInput;
+    const tzInput = urlParams.get('tz') || 'America/Los_Angeles';
+    let timeZone = tzInput;
 
     // Validate timezone and fallback to PST if invalid
     try {
