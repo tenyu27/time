@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PST Clock Overlay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: rgba(0, 0, 0, 0.85);
+      --text-color: #ffffff;
+      --accent-color: #ffffff;
+      --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --border-radius: 16px;
+      --padding: 12px 18px;
+      --blur: 12px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: transparent;
+      font-family: var(--font-main);
+      color: var(--text-color);
+      display: flex;
+      justify-content: flex-start;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 0;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    #clock-widget {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 300px;
+      height: 100px;
+      padding: var(--padding);
+      background: var(--bg-color);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--border-radius);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      animation: fadeIn 0.8s ease-out forwards;
+      transition: transform 0.3s ease;
+      overflow: hidden;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+
+    .time-container {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    #time {
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+      font-variant-numeric: tabular-nums;
+    }
+
+    #suffix {
+      font-size: 18px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.8);
+      letter-spacing: 0.05em;
+    }
+
+    #date {
+      font-size: 18px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.8);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 4px;
+    }
+
+    /* Responsive override for OBS custom CSS if needed */
+    .custom-style #clock-widget {
+      background: none;
+      border: none;
+      box-shadow: none;
+      backdrop-filter: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="clock-widget">
+    <div class="time-container">
+      <span id="time">00:00:00</span>
+      <span id="suffix">PT</span>
+    </div>
+    <div id="date">JAN 01, 2024</div>
+  </div>
+
+  <script>
+    const timeElement = document.getElementById('time');
+    const dateElement = document.getElementById('date');
+    const widget = document.getElementById('clock-widget');
+
+    // URL Parameters handling
+    const urlParams = new URLSearchParams(window.location.search);
+
+    // Scale support
+    if (urlParams.has('scale')) {
+      widget.style.transform = `scale(${urlParams.get('scale')})`;
+      widget.style.transformOrigin = 'top left';
+    }
+
+    // Custom Styles
+    if (urlParams.has('style')) {
+      widget.setAttribute('style', widget.getAttribute('style') + ';' + urlParams.get('style'));
+    }
+
+    if (urlParams.has('transparent')) {
+      widget.style.background = 'none';
+      widget.style.border = 'none';
+      widget.style.boxShadow = 'none';
+      widget.style.backdropFilter = 'none';
+    }
+
+    const timeFormatter = new Intl.DateTimeFormat('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false, // Default to 24h
+      timeZone: 'America/Los_Angeles'
+    });
+
+    // Optional 12h support
+    const use12h = urlParams.get('12h') === 'true';
+    const formattedTime = (date) => {
+      return new Intl.DateTimeFormat('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: use12h,
+        timeZone: 'America/Los_Angeles'
+      }).format(date);
+    };
+
+    const dateFormatter = new Intl.DateTimeFormat('en-US', {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'America/Los_Angeles'
+    });
+
+    function updateClock() {
+      const now = new Date();
+
+      // For time, we just use the formatter directly
+      timeElement.textContent = formattedTime(now).replace(/\s?[AP]M/, ''); // Remove AM/PM if 12h but usually we want it in suffix if 12h
+
+      // Handle AM/PM if 12h mode
+      if (use12h) {
+        const parts = new Intl.DateTimeFormat('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true,
+          timeZone: 'America/Los_Angeles'
+        }).formatToParts(now);
+        const dayPeriod = parts.find(p => p.type === 'dayPeriod').value;
+        document.getElementById('suffix').textContent = dayPeriod + ' PT';
+      } else {
+        document.getElementById('suffix').textContent = 'PT';
+      }
+
+      dateElement.textContent = dateFormatter.format(now).toUpperCase();
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
+</body>
+
+</html>
