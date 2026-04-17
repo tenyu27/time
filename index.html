@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PST Clock Overlay</title>
+  <title>Clock Overlay</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
@@ -118,10 +118,47 @@
   <script>
     const timeElement = document.getElementById('time');
     const dateElement = document.getElementById('date');
+    const suffixElement = document.getElementById('suffix');
     const widget = document.getElementById('clock-widget');
 
     // URL Parameters handling
     const urlParams = new URLSearchParams(window.location.search);
+
+    // Timezone Alias Map
+    const tzMap = {
+      'PST': 'America/Los_Angeles',
+      'PDT': 'America/Los_Angeles',
+      'PT': 'America/Los_Angeles',
+      'EST': 'America/New_York',
+      'EDT': 'America/New_York',
+      'ET': 'America/New_York',
+      'CST': 'America/Chicago',
+      'CDT': 'America/Chicago',
+      'CT': 'America/Chicago',
+      'MST': 'America/Denver',
+      'MDT': 'America/Denver',
+      'MT': 'America/Denver',
+      'UTC': 'UTC',
+      'GMT': 'GMT',
+      'JST': 'Asia/Tokyo',
+      'KST': 'Asia/Seoul',
+      'BST': 'Europe/London',
+      'CET': 'Europe/Paris',
+      'CEST': 'Europe/Paris',
+      'AEST': 'Australia/Sydney',
+      'AEDT': 'Australia/Sydney',
+    };
+
+    const tzInput = urlParams.get('tz') || 'PST';
+    let timeZone = tzMap[tzInput.toUpperCase()] || tzInput;
+
+    // Validate timezone and fallback to PST if invalid
+    try {
+      new Intl.DateTimeFormat('en-US', { timeZone }).format(new Date());
+    } catch (e) {
+      console.warn(`Invalid timezone "${timeZone}", falling back to America/Los_Angeles`);
+      timeZone = 'America/Los_Angeles';
+    }
 
     // Scale support
     if (urlParams.has('scale')) {
@@ -141,56 +178,43 @@
       widget.style.backdropFilter = 'none';
     }
 
-    const timeFormatter = new Intl.DateTimeFormat('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false, // Default to 24h
-      timeZone: 'America/Los_Angeles'
-    });
-
-    // Optional 12h support
     const use12h = urlParams.get('12h') === 'true';
-    const formattedTime = (date) => {
-      return new Intl.DateTimeFormat('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: use12h,
-        timeZone: 'America/Los_Angeles'
-      }).format(date);
-    };
-
-    const dateFormatter = new Intl.DateTimeFormat('en-US', {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      timeZone: 'America/Los_Angeles'
-    });
 
     function updateClock() {
       const now = new Date();
 
-      // For time, we just use the formatter directly
-      timeElement.textContent = formattedTime(now).replace(/\s?[AP]M/, ''); // Remove AM/PM if 12h but usually we want it in suffix if 12h
+      // Format Time
+      const timeParts = new Intl.DateTimeFormat('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: use12h,
+        timeZone: timeZone
+      }).formatToParts(now);
 
-      // Handle AM/PM if 12h mode
-      if (use12h) {
-        const parts = new Intl.DateTimeFormat('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: true,
-          timeZone: 'America/Los_Angeles'
-        }).formatToParts(now);
-        const dayPeriod = parts.find(p => p.type === 'dayPeriod').value;
-        document.getElementById('suffix').textContent = dayPeriod + ' PT';
-      } else {
-        document.getElementById('suffix').textContent = 'PT';
-      }
+      const hour = timeParts.find(p => p.type === 'hour').value;
+      const minute = timeParts.find(p => p.type === 'minute').value;
+      const second = timeParts.find(p => p.type === 'second').value;
+      const dayPeriod = use12h ? timeParts.find(p => p.type === 'dayPeriod').value : '';
 
-      dateElement.textContent = dateFormatter.format(now).toUpperCase();
+      timeElement.textContent = `${hour}:${minute}:${second}`;
+
+      // Format Timezone Abbreviation
+      const tzPart = new Intl.DateTimeFormat('en-US', {
+        timeZone: timeZone,
+        timeZoneName: 'short'
+      }).formatToParts(now).find(p => p.type === 'timeZoneName').value;
+
+      suffixElement.textContent = use12h ? `${dayPeriod} ${tzPart}` : tzPart;
+
+      // Format Date
+      dateElement.textContent = new Intl.DateTimeFormat('en-US', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        timeZone: timeZone
+      }).format(now).toUpperCase();
     }
 
     setInterval(updateClock, 1000);
