@@ -1,12 +1,12 @@
-# Modern Clock Overlay
+# Modern Time Overlay
 
-A premium, modern, and lightweight clock overlay for OBS. Designed for clarity and aesthetic appeal with a glassmorphism effect. Supports global timezones and deep customization.
+A premium, modern, and lightweight time overlay for OBS. Designed for clarity and aesthetic appeal with a glassmorphism effect. Supports global timezones and deep customization.
 
-Hosted at: [time.tenyu.gg](https://time.tenyu.gg)
+Hosted at: [now.fw.fo](https://now.fw.fo)
 
 ## Setup in OBS
 1. Create a new **Browser Source** in OBS.
-2. URL: `https://time.tenyu.gg` (defaults to PST)
+2. URL: `https://now.fw.fo` (defaults to PST)
 3. Width: `300`
 4. Height: `100`
 
@@ -22,7 +22,7 @@ Customize the clock by appending these to the URL (combine using `&`):
 - `?style=color:red;`: Apply custom CSS directly to the widget.
 
 ### Examples
-- **NYC Time (12h):** `https://time.tenyu.gg?tz=America/New_York&12h=true`
-- **Tokyo Time:** `https://time.tenyu.gg?tz=Asia/Tokyo`
-- **London Time:** `https://time.tenyu.gg?tz=Europe/London`
-- **Minimalist UTC:** `https://time.tenyu.gg?tz=UTC&transparent=true`
+- **NYC Time (12h):** `https://now.fw.fo?tz=America/New_York&12h=true`
+- **Tokyo Time:** `https://now.fw.fo?tz=Asia/Tokyo`
+- **London Time:** `https://now.fw.fo?tz=Europe/London`
+- **Minimalist UTC:** `https://now.fw.fo?tz=UTC&transparent=true`
